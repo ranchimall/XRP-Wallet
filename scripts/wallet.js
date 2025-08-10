@@ -1545,6 +1545,19 @@ async function checkBalanceAndTransactions() {
         if (allTransactions.length === 0) {
           document.getElementById("txList").innerHTML =
             '<div class="no-transactions"><i class="fas fa-inbox"></i><p>No transactions found for this address.</p></div>';
+          
+          // Hide transaction controls and reset pagination
+          document.getElementById("transactionControls").style.display = "none";
+          
+          // Reset pagination info
+          document.getElementById("paginationInfo").textContent = "Showing 0 - 0 of 0 transactions";
+          
+          // Clear page numbers
+          document.getElementById("pageNumbers").innerHTML = "";
+          
+          // Disable pagination buttons
+          document.getElementById("prevBtn").disabled = true;
+          document.getElementById("nextBtn").disabled = true;
         } else {
           // Show controls and display transactions
           document.getElementById("transactionControls").style.display =
