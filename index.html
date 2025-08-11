@@ -443,17 +443,68 @@
 
     <!-- Confirmation Popup -->
     <sm-popup id="sendConfirm">
-      <div class="popup-content">
-        <h3><i class="fas fa-exclamation-triangle"></i> Confirm Transaction</h3>
-        <div class="transaction-details" id="transactionDetails">
-          <!-- Transaction details will be populated here -->
+      <div class="modern-popup-container">
+        <!-- Popup Header -->
+        <div class="popup-header">
+          <div class="popup-icon confirm-icon">
+            <i class="fas fa-shield-alt"></i>
+          </div>
+          <h2 class="popup-title">Confirm Transaction</h2>
+          <p class="popup-subtitle">Please review the transaction details before sending</p>
         </div>
-        <div class="popup-actions">
-          <button onclick="closePopup()" class="btn btn-secondary">
-            <i class="fas fa-times"></i> Cancel
+
+        <!-- Transaction Summary -->
+        <div class="transaction-summary">
+          <div class="summary-item amount-highlight">
+            <div class="summary-icon">
+              <i class="fas fa-coins"></i>
+            </div>
+            <div class="summary-content">
+              <span class="summary-label">Amount to Send</span>
+              <span class="summary-value" id="confirmAmount">0 XRP</span>
+            </div>
+          </div>
+          
+          <div class="summary-item">
+            <div class="summary-icon">
+              <i class="fas fa-user-minus"></i>
+            </div>
+            <div class="summary-content">
+              <span class="summary-label">From</span>
+              <span class="summary-value address-text" id="confirmFrom">Loading...</span>
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-icon">
+              <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="summary-content">
+              <span class="summary-label">To</span>
+              <span class="summary-value address-text" id="confirmTo">Loading...</span>
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-icon">
+              <i class="fas fa-receipt"></i>
+            </div>
+            <div class="summary-content">
+              <span class="summary-label">Network Fee</span>
+              <span class="summary-value" id="confirmFee">~0.00001 XRP</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="popup-actions modern-actions">
+          <button onclick="closePopup()" class="btn btn-cancel">
+            <i class="fas fa-times"></i>
+            <span>Cancel</span>
           </button>
-          <button onclick="confirmSend()" class="btn btn-primary">
-            <i class="fas fa-paper-plane"></i> Send
+          <button onclick="confirmSend()" class="btn btn-confirm">
+            <i class="fas fa-paper-plane"></i>
+            <span>Confirm</span>
           </button>
         </div>
       </div>
@@ -461,14 +512,46 @@
 
     <!-- Transaction Success Popup -->
     <sm-popup id="transactionSuccess">
-      <div class="popup-content">
-        <h3><i class="fas fa-check-circle"></i> Transaction Successful!</h3>
-        <div class="transaction-details" id="successTransactionDetails">
-          <!-- Success transaction details will be populated here -->
+      <div class="modern-popup-container success-popup">
+        <!-- Success Header -->
+        <div class="popup-header success-header">
+          <div class="popup-icon success-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <h2 class="popup-title">Transaction Successful!</h2>
+          <p class="popup-subtitle">Your XRP has been sent successfully</p>
         </div>
-        <div class="popup-actions">
-          <button onclick="closePopup()" class="btn btn-primary">
-            <i class="fas fa-check"></i> Close
+
+        <!-- Transaction Details -->
+        <div class="success-details">
+          <div class="success-summary">
+            <div class="success-item">
+              <span class="success-label">Amount Sent</span>
+              <span class="success-value" id="successAmount">0 XRP</span>
+            </div>
+            <div class="success-item">
+              <span class="success-label">Network Fee</span>
+              <span class="success-value" id="successFee">0 XRP</span>
+            </div>
+          </div>
+
+          <!-- Expandable Details -->
+          <div class="expandable-details">
+            <button class="details-toggle" onclick="toggleTransactionDetails()">
+              <span>View Details</span>
+              <i class="fas fa-chevron-down"></i>
+            </button>
+            <div class="details-content" id="expandableDetails">
+              <!-- Detailed transaction info will be populated here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Success Actions -->
+        <div class="popup-actions modern-actions">
+          <button onclick="closePopup()" class="btn btn-done">
+            <i class="fas fa-check"></i>
+            <span>Done</span>
           </button>
         </div>
       </div>
@@ -568,6 +651,23 @@
           themeIcon.className = "fas fa-sun";
         } else {
           themeIcon.className = "fas fa-moon";
+        }
+      }
+
+      // Toggle transaction details in success popup
+      function toggleTransactionDetails() {
+        const detailsContent = document.getElementById("expandableDetails");
+        const toggleButton = document.querySelector(".details-toggle");
+        const icon = toggleButton.querySelector("i");
+        
+        if (detailsContent.classList.contains("expanded")) {
+          detailsContent.classList.remove("expanded");
+          icon.className = "fas fa-chevron-down";
+          toggleButton.querySelector("span").textContent = "View Details";
+        } else {
+          detailsContent.classList.add("expanded");
+          icon.className = "fas fa-chevron-up";
+          toggleButton.querySelector("span").textContent = "Hide Details";
         }
       }
 
