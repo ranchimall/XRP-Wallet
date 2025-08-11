@@ -520,28 +520,15 @@ async function sendXRP() {
     };
 
     // Populate transaction details in confirmation popup
-    const detailsContainer = getRef("transactionDetails");
-    if (detailsContainer) {
-      detailsContainer.innerHTML = `        <div class="detail-row">
-          <span class="detail-label">From:</span>
-          <span class="detail-value">${
-            wallet.address || wallet.classicAddress
-          }</span>
-        </div>
-      <div class="detail-row">
-        <span class="detail-label">To:</span>
-        <span class="detail-value">${destination}</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Amount:</span>
-        <span class="detail-value">${amount} XRP</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-label">Network Fee:</span>
-        <span class="detail-value">~0.00001 XRP</span>
-      </div>
-    `;
-    }
+    const confirmAmountEl = getRef("confirmAmount");
+    const confirmFromEl = getRef("confirmFrom");
+    const confirmToEl = getRef("confirmTo");
+    const confirmFeeEl = getRef("confirmFee");
+    
+    if (confirmAmountEl) confirmAmountEl.textContent = `${amount} XRP`;
+    if (confirmFromEl) confirmFromEl.textContent = wallet.address || wallet.classicAddress;
+    if (confirmToEl) confirmToEl.textContent = destination;
+    if (confirmFeeEl) confirmFeeEl.textContent = "~0.00001 XRP";
 
     // Show confirmation popup
     openPopup("sendConfirm");
@@ -661,43 +648,60 @@ async function confirmSend() {
       // Close the confirmation popup first
       closePopup();
 
-      // Populate detailed success popup
-      const successDetailsContainer = getRef("successTransactionDetails");
-      if (successDetailsContainer) {
-        successDetailsContainer.innerHTML = `
-          <div class="detail-row">
-            <span class="detail-label">Status:</span>
-            <span class="detail-value" style="color: var(--success-color); font-weight: bold;">✅ Confirmed</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Amount Sent:</span>
-            <span class="detail-value">${amount} XRP</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Network Fee:</span>
-            <span class="detail-value">${fee} XRP</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">From:</span>
-            <span class="detail-value">${
-              wallet.classicAddress || wallet.address
-            }</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">To:</span>
-            <span class="detail-value">${destination}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Transaction Hash:</span>
-            <span class="detail-value">${signed.hash}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Ledger Index:</span>
-            <span class="detail-value">${Ledger_Index}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Transaction Date:</span>
-            <span class="detail-value">${rippleDate}</span>
+      // Populate success popup summary
+      const successAmountEl = getRef("successAmount");
+      const successFeeEl = getRef("successFee");
+      
+      if (successAmountEl) successAmountEl.textContent = `${amount} XRP`;
+      if (successFeeEl) successFeeEl.textContent = `${fee} XRP`;
+
+      // Populate detailed expandable section
+      const expandableDetails = getRef("expandableDetails");
+      if (expandableDetails) {
+        expandableDetails.innerHTML = `
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">
+                <i class="fas fa-check-circle"></i>
+                Status
+              </span>
+              <span class="detail-value success-status">Confirmed</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">
+                <i class="fas fa-user-minus"></i>
+                From
+              </span>
+              <span class="detail-value address-value">${wallet.classicAddress || wallet.address}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">
+                <i class="fas fa-user-plus"></i>
+                To
+              </span>
+              <span class="detail-value address-value">${destination}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">
+                <i class="fas fa-hashtag"></i>
+                Transaction Hash
+              </span>
+              <span class="detail-value hash-value" title="${signed.hash}">${signed.hash}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">
+                <i class="fas fa-layer-group"></i>
+                Ledger Index
+              </span>
+              <span class="detail-value">${Ledger_Index}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">
+                <i class="fas fa-clock"></i>
+                Transaction Time
+              </span>
+              <span class="detail-value">${rippleDate}</span>
+            </div>
           </div>
         `;
       }
