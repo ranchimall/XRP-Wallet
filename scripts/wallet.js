@@ -662,13 +662,6 @@ async function confirmSend() {
           <div class="detail-grid">
             <div class="detail-item">
               <span class="detail-label">
-                <i class="fas fa-check-circle"></i>
-                Status
-              </span>
-              <span class="detail-value success-status">Confirmed</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">
                 <i class="fas fa-user-minus"></i>
                 From
               </span>
@@ -687,13 +680,6 @@ async function confirmSend() {
                 Transaction Hash
               </span>
               <span class="detail-value hash-value" title="${signed.hash}">${signed.hash}</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">
-                <i class="fas fa-layer-group"></i>
-                Ledger Index
-              </span>
-              <span class="detail-value">${Ledger_Index}</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">
