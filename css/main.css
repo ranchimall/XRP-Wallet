@@ -2336,12 +2336,12 @@ sm-popup::part(popup) {
     max-width: 100%;
   }
 
-  .popup-actions {
+  .popup-actions:not(#sendConfirm .popup-actions):not(#transactionSuccess .popup-actions) {
     flex-direction: column;
     gap: 1rem;
   }
 
-  .popup-actions .btn {
+  .popup-actions:not(#sendConfirm .popup-actions):not(#transactionSuccess .popup-actions) .btn {
     width: 100%;
     min-width: auto;
     justify-content: center;
@@ -2818,4 +2818,64 @@ sm-popup::part(popup) {
     align-self: flex-end;
     width: auto;
   }
+
+  /* Enhanced popup mobile styles - keep buttons side by side */
+  #sendConfirm .popup-actions,
+  #transactionSuccess .popup-actions {
+    flex-direction: row !important;
+    gap: 0.5rem !important;
+    padding: 1rem 1rem 1.5rem 1rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  #sendConfirm .popup-actions .btn,
+  #transactionSuccess .popup-actions .btn {
+    flex: 1;
+    padding: 0.625rem 0.75rem !important;
+    font-size: 0.8rem !important;
+    min-width: auto !important;
+    white-space: nowrap;
+  }
+
+  #sendConfirm .popup-actions .btn i {
+    font-size: 0.75rem;
+  }
+}
+
+/* Enhanced Confirm Transaction Popup Desktop Styles */
+#sendConfirm .popup-actions,
+#transactionSuccess .popup-actions {
+  padding: 1.5rem 1.5rem 2rem 1.5rem;
+  margin: 0;
+  border: none;
+  background: var(--surface-color);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-color);
+}
+
+#transactionSuccess .popup-actions {
+  justify-content: center;
+  padding-bottom: 2rem;
+}
+
+#sendConfirm .popup-actions .btn,
+#transactionSuccess .popup-actions .btn {
+  flex: 1;
+  padding: 0.875rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#transactionSuccess .popup-actions .btn {
+  min-width: 150px;
+  max-width: 200px;
 }
