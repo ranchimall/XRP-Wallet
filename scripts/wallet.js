@@ -1509,7 +1509,7 @@ async function checkBalanceAndTransactions() {
           document.getElementById("balanceInfo").style.display = "block";
 
           notify(
-            "Account not found - Address not activated (needs 10 XRP minimum)",
+            "Account not found - Address not activated (needs 1 XRP minimum)",
             "warning"
           );
         } else {
