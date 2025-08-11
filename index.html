@@ -79,11 +79,6 @@
             </a>
           </li>
           <li>
-            <a href="#" onclick="showPage('generatePage')" class="nav-link">
-              <i class="fas fa-plus-circle"></i> Generate Address
-            </a>
-          </li>
-          <li>
             <a href="#" onclick="showPage('recoverPage')" class="nav-link">
               <i class="fas fa-key"></i> Retrieve Address
             </a>
@@ -284,80 +279,6 @@
           </div>
         </div>
 
-        <!-- Generate Address Page -->
-        <div id="generatePage" class="page hidden">
-          <div class="page-header">
-            <h2><i class="fas fa-plus-circle"></i> Generate XRP Address</h2>
-            <p>Generate XRP addresses from private keys of any blockchain</p>
-          </div>
-
-          <div class="card">
-            <!-- Private Key Input for XRP Generation -->
-            <div class="form-group">
-              <label for="generateKey">
-                <i class="fas fa-key"></i> Private Key (Required for XRP)
-              </label>
-              <input
-                type="password"
-                id="generateKey"
-                placeholder="Enter private key from any blockchain (BTC/FLO)"
-                class="form-input"
-              />
-              <small class="form-text">
-                Enter a private key from any blockchain (BTC/FLO) to generate
-                the corresponding XRP address.
-              </small>
-            </div>
-
-            <div class="generate-actions">
-              <button
-                onclick="generateXRPAddress()"
-                class="btn btn-primary btn-block"
-              >
-                <i class="fas fa-coins"></i> Generate XRP Address
-              </button>
-            </div>
-
-            <!-- XRP Generation Info -->
-            <div
-              id="xrpGenerationInfo"
-              class="card info-card"
-              style="display: none"
-            >
-              <div class="info-header">
-                <h3>
-                  <i class="fas fa-info-circle"></i> XRP Address Generation
-                </h3>
-              </div>
-              <div class="info-content">
-                <p>
-                  <strong>Note:</strong> This wallet doesn't generate XRP
-                  addresses directly.
-                </p>
-                <p>To get an XRP address, please:</p>
-                <ol>
-                  <li>Use our BTC wallet to generate a BTC private key</li>
-                  <li>
-                    Convert that BTC/FLO private key to Ripple seed using the
-                    conversion tool below
-                  </li>
-                </ol>
-                <button
-                  onclick="showPage('convertPage')"
-                  class="btn btn-primary"
-                >
-                  <i class="fas fa-exchange-alt"></i> Go to Conversion Tool
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Generated Address Output -->
-          <div id="walletOutput" class="card output-card" style="display: none">
-            <!-- Generated address info will be inserted here -->
-          </div>
-        </div>
-
         <!-- Retrieve Address Page -->
         <div id="recoverPage" class="page hidden">
           <div class="page-header">
@@ -424,14 +345,6 @@
         <span>Send</span>
       </button>
       <button
-        onclick="showPage('generatePage')"
-        class="nav-btn"
-        data-page="generatePage"
-      >
-        <i class="fas fa-plus"></i>
-        <span>Generate</span>
-      </button>
-      <button
         onclick="showPage('recoverPage')"
         class="nav-btn"
         data-page="recoverPage"
@@ -450,7 +363,9 @@
             <i class="fas fa-shield-alt"></i>
           </div>
           <h2 class="popup-title">Confirm Transaction</h2>
-          <p class="popup-subtitle">Please review the transaction details before sending</p>
+          <p class="popup-subtitle">
+            Please review the transaction details before sending
+          </p>
         </div>
 
         <!-- Transaction Summary -->
@@ -464,14 +379,16 @@
               <span class="summary-value" id="confirmAmount">0 XRP</span>
             </div>
           </div>
-          
+
           <div class="summary-item">
             <div class="summary-icon">
               <i class="fas fa-user-minus"></i>
             </div>
             <div class="summary-content">
               <span class="summary-label">From</span>
-              <span class="summary-value address-text" id="confirmFrom">Loading...</span>
+              <span class="summary-value address-text" id="confirmFrom"
+                >Loading...</span
+              >
             </div>
           </div>
 
@@ -481,7 +398,9 @@
             </div>
             <div class="summary-content">
               <span class="summary-label">To</span>
-              <span class="summary-value address-text" id="confirmTo">Loading...</span>
+              <span class="summary-value address-text" id="confirmTo"
+                >Loading...</span
+              >
             </div>
           </div>
 
@@ -659,7 +578,7 @@
         const detailsContent = document.getElementById("expandableDetails");
         const toggleButton = document.querySelector(".details-toggle");
         const icon = toggleButton.querySelector("i");
-        
+
         if (detailsContent.classList.contains("expanded")) {
           detailsContent.classList.remove("expanded");
           icon.className = "fas fa-chevron-down";
