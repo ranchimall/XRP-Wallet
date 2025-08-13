@@ -468,7 +468,7 @@ function convertWIFtoRippleWallet(wif) {
       keyBuffer = keyBuffer.slice(0, -1); // remove compression flag
     }
     const data = xrpl.Wallet.fromEntropy(keyBuffer);
-    console.log(data);
+    
 
     return {
       address: data.address,
@@ -493,9 +493,7 @@ async function sendXRP() {
   const senderKey = senderKeyElement.value;
   const destination = destinationElement.value;
   const amount = amountElement.value;
-  console.log("Sender Key:", senderKey);
-  console.log("Destination:", destination);
-  console.log("Amount:", amount);
+  
   // Validation
   if (!senderKey) return notify("Please enter your private key", "error");
   if (!destination) return notify("Please enter recipient address", "error");

@@ -2794,14 +2794,18 @@ sm-popup::part(popup) {
   }
 
   sm-popup::part(popup-container) {
-    padding: 1rem !important;
+    padding: 5vh 1rem 5vh 1rem !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
   }
 
   sm-popup::part(popup) {
-    max-height: 90vh !important;
+    max-height: none !important;
     margin: 0 auto !important;
     min-width: auto !important;
     width: 100% !important;
+    overflow: visible !important;
   }
 
   .transaction-details {
@@ -3246,17 +3250,16 @@ sm-popup::part(popup) {
   
   @media (max-width: 768px) {
     .modern-popup-container {
-      max-height: 75vh !important;
-      margin-bottom: 10vh !important;
+      max-height: none !important;
+      margin: 0 auto !important;
+      position: relative !important;
     }
   }
 
   /* Modern Popup Mobile Styles */
   .modern-popup-container {
     max-width: 95%;
-    margin: 0.5rem auto;
     border-radius: 12px;
-    max-height: 80vh;
     overflow-y: auto;
   }
 
