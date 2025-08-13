@@ -2794,18 +2794,17 @@ sm-popup::part(popup) {
   }
 
   sm-popup::part(popup-container) {
-    padding: 5vh 1rem 5vh 1rem !important;
+    padding: 2rem 1rem 1rem 1rem !important;
     align-items: flex-start !important;
     justify-content: center !important;
-    overflow-y: auto !important;
   }
 
   sm-popup::part(popup) {
-    max-height: none !important;
-    margin: 0 auto !important;
+    max-height: 75vh !important;
+    margin: 10vh auto 5vh auto !important;
     min-width: auto !important;
     width: 100% !important;
-    overflow: visible !important;
+    overflow-y: auto !important;
   }
 
   .transaction-details {
@@ -3250,8 +3249,8 @@ sm-popup::part(popup) {
   
   @media (max-width: 768px) {
     .modern-popup-container {
-      max-height: none !important;
-      margin: 0 auto !important;
+      max-height: 75vh !important;
+      margin: 10vh auto 10vh auto !important;
       position: relative !important;
     }
   }
