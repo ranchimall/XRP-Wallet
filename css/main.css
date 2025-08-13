@@ -1839,9 +1839,10 @@ sm-popup::part(popup) {
   background: var(--surface-color);
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
+  overflow-y: auto;
   position: relative;
   max-width: 500px;
+  max-height: 85vh;
   margin: 0 auto;
 }
 
@@ -3242,12 +3243,20 @@ sm-popup::part(popup) {
     width: auto;
   }
 
+  
+  @media (max-width: 768px) {
+    .modern-popup-container {
+      max-height: 75vh !important;
+      margin-bottom: 10vh !important;
+    }
+  }
+
   /* Modern Popup Mobile Styles */
   .modern-popup-container {
     max-width: 95%;
     margin: 0.5rem auto;
     border-radius: 12px;
-    max-height: 95vh;
+    max-height: 80vh;
     overflow-y: auto;
   }
 
@@ -3473,12 +3482,12 @@ sm-popup::part(popup) {
   }
 }
 
-/* Extra Small Mobile Screens (Samsung Galaxy S8+, iPhone SE, etc.) */
+/* Extra Small Mobile Screens  */
 @media (max-width: 480px) and (max-height: 740px) {
   /* More compact popup for very small screens */
   .modern-popup-container {
     margin: 0.25rem auto;
-    max-height: 98vh;
+    max-height: 70vh;
   }
 
   .popup-header {
