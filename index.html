@@ -92,44 +92,105 @@
         <div id="connectPage" class="page">
           <div class="page-header">
             <h2><i class="fas fa-search-dollar"></i> Check Balance</h2>
-            <p>
-              Check the XRP balance and transaction history for any Ripple
-              address
-            </p>
+            <p>Check XRP balance or view transaction details</p>
           </div>
 
           <div class="card">
+            <!-- Search Type Selector -->
             <div class="form-group">
-              <label for="checkAddress">
-                <i class="fas fa-wallet"></i> XRP Address or Private Key
-              </label>
-              <input
-                type="text"
-                id="checkAddress"
-                class="form-input"
-                placeholder="Enter XRP address (r...), private key (BTC/FLO)"
-                autocomplete="off"
-              />
-              <div class="input-help">
-                Enter an XRP address,private key (BTC/FLO) to check XRP balance
+              <label>Search Type:</label>
+              <div class="search-type-tabs">
+                <button
+                  type="button"
+                  class="tab-btn active"
+                  onclick="switchSearchType('balance')"
+                  id="balanceTab"
+                >
+                  <i class="fas fa-wallet"></i> Balance & History
+                </button>
+                <button
+                  type="button"
+                  class="tab-btn"
+                  onclick="switchSearchType('transaction')"
+                  id="transactionTab"
+                >
+                  <i class="fas fa-receipt"></i> Transaction Details
+                </button>
               </div>
             </div>
 
-            <button
-              onclick="checkBalanceAndTransactions()"
-              class="btn btn-primary btn-block"
+            <!-- Balance Search -->
+            <div id="balanceSearch" class="search-section">
+              <div class="form-group">
+                <label for="checkAddress">
+                  <i class="fas fa-wallet"></i> XRP Address or Private Key
+                </label>
+                <input
+                  type="text"
+                  id="checkAddress"
+                  class="form-input"
+                  placeholder="Enter XRP address (r...), BTC/FLO private key, or XRP seed"
+                  autocomplete="off"
+                />
+                <div class="input-help">
+                  Enter an XRP address, private key (BTC/FLO), or XRP seed to
+                  check balance
+                </div>
+              </div>
+
+              <button
+                onclick="checkBalanceAndTransactions()"
+                class="btn btn-primary btn-block"
+              >
+                <i class="fas fa-search-dollar"></i> Check Balance
+              </button>
+            </div>
+
+            <!-- Transaction Hash Search -->
+            <div
+              id="transactionSearch"
+              class="search-section"
+              style="display: none"
             >
-              <i class="fas fa-search-dollar"></i> Check Balance
-            </button>
+              <div class="form-group">
+                <label for="checkTransactionHash">
+                  <i class="fas fa-receipt"></i> Transaction Hash
+                </label>
+                <input
+                  type="text"
+                  id="checkTransactionHash"
+                  class="form-input"
+                  placeholder="Enter transaction hash (TX ID)"
+                  autocomplete="off"
+                />
+                <div class="input-help">
+                  Enter a transaction hash to view transaction details
+                </div>
+              </div>
+
+              <button
+                onclick="checkTransactionDetails()"
+                class="btn btn-primary btn-block"
+              >
+                <i class="fas fa-search"></i> View Transaction
+              </button>
+            </div>
           </div>
 
           <!-- Balance Info Display -->
           <div class="card balance-info" id="balanceInfo" style="display: none">
             <div class="balance-header">
               <h3><i class="fas fa-coins"></i> Account Balance</h3>
-              <div class="balance-display">
-                <span class="balance-amount" id="displayBalance">0 XRP</span>
-              </div>
+              <button
+                onclick="copyBalanceLink()"
+                class="btn-icon share-btn"
+                title="Copy Shareable Link"
+              >
+                <i class="fas fa-share-alt"></i>
+              </button>
+            </div>
+            <div class="balance-display">
+              <span class="balance-amount" id="displayBalance">0 XRP</span>
             </div>
             <div class="account-details">
               <div class="detail-row">
@@ -145,6 +206,27 @@
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Transaction Details Display -->
+          <div
+            class="card transaction-details"
+            id="transactionDetails"
+            style="display: none"
+          >
+            <div class="transaction-details-header">
+              <h3><i class="fas fa-receipt"></i> Transaction Details</h3>
+              <button
+                onclick="copyTransactionLink()"
+                class="btn-icon share-btn"
+                title="Copy Shareable Link"
+              >
+                <i class="fas fa-share-alt"></i>
+              </button>
+            </div>
+            <div id="transactionDetailsContent">
+              <!-- Transaction details -->
             </div>
           </div>
 

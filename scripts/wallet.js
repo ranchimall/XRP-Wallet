@@ -314,6 +314,7 @@ function initializeInputControls() {
     "amount", // Send page - amount
     "recoverKey", // Retrieve page
     "checkAddress", // Balance check
+    "checkTransactionHash", // Transaction hash search
     "generateKey", // Generate page
   ];
 
@@ -468,7 +469,6 @@ function convertWIFtoRippleWallet(wif) {
       keyBuffer = keyBuffer.slice(0, -1); // remove compression flag
     }
     const data = xrpl.Wallet.fromEntropy(keyBuffer);
-    console.log(data);
 
     return {
       address: data.address,
@@ -493,9 +493,7 @@ async function sendXRP() {
   const senderKey = senderKeyElement.value;
   const destination = destinationElement.value;
   const amount = amountElement.value;
-  console.log("Sender Key:", senderKey);
-  console.log("Destination:", destination);
-  console.log("Amount:", amount);
+
   // Validation
   if (!senderKey) return notify("Please enter your private key", "error");
   if (!destination) return notify("Please enter recipient address", "error");
@@ -778,7 +776,7 @@ async function confirmSend() {
     confirmBtn.innerHTML = originalText;
     confirmBtn.disabled = false;
 
-    // Don't close popup here - it's handled in success/error cases
+    // Don't close popup here 
     window.pendingTransaction = null;
   }
 }
@@ -798,12 +796,12 @@ function displaySearchedAddresses(addresses) {
   let container = document.getElementById("searchedAddressesContainer");
 
   if (!container && addresses.length > 0) {
-    // Create the container after the balance check card
-    const balanceCard = document.querySelector("#connectPage .card");
+    // Create the container at the end of the connectPage
+    const connectPage = document.getElementById("connectPage");
     container = document.createElement("div");
     container.id = "searchedAddressesContainer";
     container.className = "card searched-addresses-card";
-    balanceCard.parentNode.insertBefore(container, balanceCard.nextSibling);
+    connectPage.appendChild(container);
   }
 
   if (!container) return;
@@ -1308,7 +1306,7 @@ async function checkBalanceAndTransactions() {
   try {
     if (!userInput) {
       notify(
-        "Please enter an XRP address, BTC private key, or FLO private key",
+        "Please enter an XRP address, XRP seed, BTC private key, or FLO private key",
         "error"
       );
       return;
@@ -1346,11 +1344,34 @@ async function checkBalanceAndTransactions() {
       );
       return;
     }
-    // Detect if input is a private key and convert to XRP address
+    // Detect if input is a private key/seed and convert to XRP address
     else if (!userInput.startsWith("r")) {
       try {
+        // Check if it's an XRP seed first (starts with 's')
+        if (userInput.startsWith("s") && userInput.length >= 25) {
+          try {
+            notify("Detected XRP seed - converting to XRP address...", "info");
+
+            const rippleWallet = xrpl.Wallet.fromSeed(userInput);
+            actualXRPAddress = rippleWallet.address;
+
+            sourceInfo = {
+              type: "XRP Seed",
+              originalKey: userInput,
+              originalAddress: actualXRPAddress,
+              blockchain: "XRP",
+            };
+
+            notify(
+              `Converted XRP seed to address: ${actualXRPAddress}`,
+              "success"
+            );
+          } catch (seedError) {
+            throw new Error("Invalid XRP seed format");
+          }
+        }
         // Check if it's a Bitcoin WIF format (starts with "L" or "K")
-        if (userInput.startsWith("L") || userInput.startsWith("K")) {
+        else if (userInput.startsWith("L") || userInput.startsWith("K")) {
           notify(
             "Detected Bitcoin private key - converting to XRP address...",
             "info"
@@ -1463,6 +1484,12 @@ async function checkBalanceAndTransactions() {
         document.getElementById("checkedAddress").textContent =
           actualXRPAddress;
 
+        // Update URL for sharing
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set("address", actualXRPAddress);
+        currentUrl.searchParams.delete("tx"); // Remove transaction param if exists
+        window.history.pushState({}, "", currentUrl);
+
         // Save to IndexedDB with source information
         try {
           await searchedAddressDB.saveSearchedAddress(
@@ -1484,6 +1511,12 @@ async function checkBalanceAndTransactions() {
           document.getElementById("displayBalance").textContent = "0 XRP";
           document.getElementById("checkedAddress").textContent =
             actualXRPAddress;
+
+          // Update URL for sharing
+          const currentUrl = new URL(window.location);
+          currentUrl.searchParams.set("address", actualXRPAddress);
+          currentUrl.searchParams.delete("tx"); // Remove transaction param if exists
+          window.history.pushState({}, "", currentUrl);
 
           // Save to IndexedDB with source information
           try {
@@ -1909,6 +1942,282 @@ function generateFLOFromPrivateKey(privateKey) {
   }
 }
 
+// Switch between search types
+function switchSearchType(type) {
+  const balanceTab = document.getElementById("balanceTab");
+  const transactionTab = document.getElementById("transactionTab");
+  const balanceSearch = document.getElementById("balanceSearch");
+  const transactionSearch = document.getElementById("transactionSearch");
+
+  if (type === "balance") {
+    balanceTab.classList.add("active");
+    transactionTab.classList.remove("active");
+    balanceSearch.style.display = "block";
+    transactionSearch.style.display = "none";
+
+    // Hide transaction details if visible
+    document.getElementById("transactionDetails").style.display = "none";
+  } else {
+    transactionTab.classList.add("active");
+    balanceTab.classList.remove("active");
+    transactionSearch.style.display = "block";
+    balanceSearch.style.display = "none";
+
+    // Hide balance info if visible
+    document.getElementById("balanceInfo").style.display = "none";
+    document.getElementById("transactionSection").style.display = "none";
+  }
+}
+
+// Check transaction details by hash
+async function checkTransactionDetails() {
+  const hashInput = document.getElementById("checkTransactionHash");
+  const txHash = hashInput.value.trim();
+
+  try {
+    if (!txHash) {
+      notify("Please enter a transaction hash", "error");
+      return;
+    }
+
+    // Show loading state
+    const checkBtn = document.querySelector(
+      '[onclick="checkTransactionDetails()"]'
+    );
+    const originalText = checkBtn.innerHTML;
+    checkBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    checkBtn.disabled = true;
+
+    // Create XRPL client instance
+    const client = new xrpl.Client("wss://s.altnet.rippletest.net:51233");
+
+    try {
+      await client.connect();
+
+      // Get transaction details
+      const txResponse = await client.request({
+        command: "tx",
+        transaction: txHash,
+      });
+
+      if (txResponse.result) {
+        displayTransactionDetails(txResponse.result);
+
+        // Update URL for sharing
+        const currentUrl = new URL(window.location);
+        currentUrl.searchParams.set("tx", txHash);
+        window.history.pushState({}, "", currentUrl);
+
+        notify("Transaction details loaded successfully", "success");
+      } else {
+        notify("Transaction not found", "error");
+      }
+    } catch (error) {
+      console.error("Transaction lookup error:", error);
+      if (error.data && error.data.error === "txnNotFound") {
+        notify(
+          "Transaction not found. Please check the hash and try again.",
+          "error"
+        );
+      } else {
+        notify(
+          "Failed to fetch transaction details: " + error.message,
+          "error"
+        );
+      }
+    } finally {
+      await client.disconnect();
+    }
+  } catch (error) {
+    console.error("Error in checkTransactionDetails:", error);
+    notify("An error occurred while checking transaction details", "error");
+  } finally {
+    // Restore button state
+    const checkBtn = document.querySelector(
+      '[onclick="checkTransactionDetails()"]'
+    );
+    if (checkBtn) {
+      checkBtn.innerHTML = '<i class="fas fa-search"></i> View Transaction';
+      checkBtn.disabled = false;
+    }
+  }
+}
+
+// Display transaction details
+function displayTransactionDetails(txData) {
+  const detailsContainer = document.getElementById("transactionDetailsContent");
+  // console.log(txData);
+  // console.log(parseFloat(txData.Amount)/ 1000000);
+  // console.log(parseFloat(txData.Fee)/ 1000000);
+
+  const txType = txData.TransactionType || "Unknown";
+  const account = txData.Account || "N/A";
+  const destination = txData.Destination || "N/A";
+  const amount = txData.Amount
+    ? parseFloat(txData.Amount) / 1000000 + " XRP"
+    : "N/A";
+  const fee = txData.Fee ? parseFloat(txData.Fee) / 1000000 + " XRP" : "N/A";
+  const sequence = txData.Sequence || "N/A";
+  const ledgerIndex = txData.ledger_index || "N/A";
+  const hash = txData.hash || "N/A";
+  const date = txData.date
+    ? new Date((txData.date + 946684800) * 1000).toLocaleString()
+    : "N/A";
+  const validated = txData.validated ? "Validated" : "Not Validated";
+
+  detailsContainer.innerHTML = `
+    <div class="tx-detail-card">
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-check-circle"></i>
+          Status:
+        </span>
+        <span class="tx-detail-value success">${validated}</span>
+      </div>
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-exchange-alt"></i>
+          Type:
+        </span>
+        <span class="tx-detail-value">${txType}</span>
+      </div>
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-coins"></i>
+          Amount:
+        </span>
+        <span class="tx-detail-value amount">${amount}</span>
+      </div>
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-receipt"></i>
+          Fee:
+        </span>
+        <span class="tx-detail-value">${fee}</span>
+      </div>
+    </div>
+    
+    <div class="tx-detail-card">
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-user-minus"></i>
+          From:
+        </span>
+        <span class="tx-detail-value">${account}</span>
+      </div>
+      ${
+        destination !== "N/A"
+          ? `
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-user-plus"></i>
+          To:
+        </span>
+        <span class="tx-detail-value">${destination}</span>
+      </div>
+      `
+          : ""
+      }
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-hashtag"></i>
+          Hash:
+        </span>
+        <span class="tx-detail-value">${hash}</span>
+      </div>
+    </div>
+    
+    <div class="tx-detail-card">
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-layer-group"></i>
+          Ledger:
+        </span>
+        <span class="tx-detail-value">${ledgerIndex}</span>
+      </div>
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-sort-numeric-up"></i>
+          Sequence:
+        </span>
+        <span class="tx-detail-value">${sequence}</span>
+      </div>
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-clock"></i>
+          Date:
+        </span>
+        <span class="tx-detail-value">${date}</span>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("transactionDetails").style.display = "block";
+}
+
+// shareable balance link
+function copyBalanceLink() {
+  const address = document.getElementById("checkedAddress").textContent;
+  if (address && address !== "-") {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set("address", address);
+    currentUrl.searchParams.delete("tx"); // Remove transaction param if exists
+
+    navigator.clipboard
+      .writeText(currentUrl.toString())
+      .then(() => {
+        notify("Balance link copied to clipboard!", "success");
+      })
+      .catch(() => {
+        notify("Failed to copy link", "error");
+      });
+  } else {
+    notify("No address available to share", "error");
+  }
+}
+
+// shareable transaction link
+function copyTransactionLink() {
+  const currentUrl = new URL(window.location);
+  const txHash = currentUrl.searchParams.get("tx");
+
+  if (txHash) {
+    navigator.clipboard
+      .writeText(currentUrl.toString())
+      .then(() => {
+        notify("Transaction link copied to clipboard!", "success");
+      })
+      .catch(() => {
+        notify("Failed to copy link", "error");
+      });
+  } else {
+    notify("No transaction hash available to share", "error");
+  }
+}
+
+// Handle URL parameters on page load
+function handleUrlParameters() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const address = urlParams.get("address");
+  const txHash = urlParams.get("tx");
+
+  if (address) {
+    // Auto-fill address and check balance
+    document.getElementById("checkAddress").value = address;
+    switchSearchType("balance");
+    setTimeout(() => {
+      checkBalanceAndTransactions();
+    }, 500);
+  } else if (txHash) {
+    // Auto-fill transaction hash and check details
+    document.getElementById("checkTransactionHash").value = txHash;
+    switchSearchType("transaction");
+    setTimeout(() => {
+      checkTransactionDetails();
+    }, 500);
+  }
+}
+
 window.sendXRP = sendXRP;
 
 window.retrieveXRPAddress = retrieveXRPAddress;
@@ -1917,6 +2226,12 @@ window.getRippleAddress = getRippleAddress;
 window.confirmSend = confirmSend;
 window.closePopup = closePopup;
 window.checkBalanceAndTransactions = checkBalanceAndTransactions;
+
+window.switchSearchType = switchSearchType;
+window.checkTransactionDetails = checkTransactionDetails;
+window.copyBalanceLink = copyBalanceLink;
+window.copyTransactionLink = copyTransactionLink;
+window.handleUrlParameters = handleUrlParameters;
 
 window.convertWIFtoRippleWallet = convertWIFtoRippleWallet;
 
@@ -1941,4 +2256,5 @@ window.copyCurrentAddress = copyCurrentAddress;
 
 document.addEventListener("DOMContentLoaded", () => {
   initializeInputControls();
+  handleUrlParameters();
 });
