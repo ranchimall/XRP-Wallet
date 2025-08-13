@@ -314,6 +314,7 @@ function initializeInputControls() {
     "amount", // Send page - amount
     "recoverKey", // Retrieve page
     "checkAddress", // Balance check
+    "checkTransactionHash", // Transaction hash search
     "generateKey", // Generate page
   ];
 
