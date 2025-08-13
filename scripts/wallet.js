@@ -2005,6 +2005,7 @@ async function checkTransactionDetails() {
 
         // Update URL for sharing
         const currentUrl = new URL(window.location);
+        currentUrl.searchParams.delete("address"); 
         currentUrl.searchParams.set("tx", txHash);
         window.history.pushState({}, "", currentUrl);
 
