@@ -544,7 +544,7 @@ async function confirmSend() {
   }
 
   const { wallet, destination, amount } = window.pendingTransaction;
-  const client = new xrpl.Client("wss://s.altnet.rippletest.net:51233");
+  const client = new xrpl.Client("wss://s1.ripple.com/");
 
   // Show loading state on confirm button
   const confirmBtn = document.querySelector('[onclick="confirmSend()"]');
@@ -776,7 +776,7 @@ async function confirmSend() {
     confirmBtn.innerHTML = originalText;
     confirmBtn.disabled = false;
 
-    // Don't close popup here 
+    // Don't close popup here
     window.pendingTransaction = null;
   }
 }
@@ -1126,10 +1126,20 @@ function displayTransactionsPage() {
 
     // Get amount - handle different formats
     let amount = "0";
-    if (meta.delivered_amount) {
+    if (
+      meta.delivered_amount &&
+      typeof meta.delivered_amount === "string" &&
+      !isNaN(Number(meta.delivered_amount))
+    ) {
       amount = xrpl.dropsToXrp(meta.delivered_amount);
-    } else if (t.Amount && typeof t.Amount === "string") {
+    } else if (
+      t.Amount &&
+      typeof t.Amount === "string" &&
+      !isNaN(Number(t.Amount))
+    ) {
       amount = xrpl.dropsToXrp(t.Amount);
+    } else {
+      amount = "N/A"; // Non-payment tx or unsupported format
     }
 
     // Format date
@@ -1461,7 +1471,7 @@ async function checkBalanceAndTransactions() {
     checkBtn.disabled = true;
 
     // Create XRPL client instance
-    const client = new xrpl.Client("wss://s.altnet.rippletest.net:51233");
+    const client = new xrpl.Client("wss://s1.ripple.com/");
 
     try {
       await client.connect();
@@ -1552,6 +1562,7 @@ async function checkBalanceAndTransactions() {
           ledger_index_max: -1,
           limit: 1000,
         });
+        console.log(res);
 
         // Store all transactions
         allTransactions = res.result.transactions;
@@ -1989,7 +2000,7 @@ async function checkTransactionDetails() {
     checkBtn.disabled = true;
 
     // Create XRPL client instance
-    const client = new xrpl.Client("wss://s.altnet.rippletest.net:51233");
+    const client = new xrpl.Client("wss://s1.ripple.com/");
 
     try {
       await client.connect();
@@ -2005,7 +2016,7 @@ async function checkTransactionDetails() {
 
         // Update URL for sharing
         const currentUrl = new URL(window.location);
-        currentUrl.searchParams.delete("address"); 
+        currentUrl.searchParams.delete("address");
         currentUrl.searchParams.set("tx", txHash);
         window.history.pushState({}, "", currentUrl);
 
