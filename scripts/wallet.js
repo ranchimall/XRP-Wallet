@@ -1120,26 +1120,94 @@ function displayTransactionsPage() {
 
     // Determine transaction direction and type
     const isIncoming = t.Destination === address;
-    const direction = isIncoming ? "Received" : "Sent";
-    const directionIcon = isIncoming ? "fa-arrow-down" : "fa-arrow-up";
-    const directionClass = isIncoming ? "incoming" : "outgoing";
+    let direction = isIncoming ? "Received" : "Sent";
+    let directionIcon = isIncoming ? "fa-arrow-down" : "fa-arrow-up";
+    let directionClass = isIncoming ? "incoming" : "outgoing";
+
+    // Special handling for OfferCreate transactions
+    if (t.TransactionType === "OfferCreate") {
+      direction = "Offer Create";
+      directionIcon = "fa-exchange-alt";
+      directionClass = "offer";
+    }
 
     // Get amount - handle different formats
     let amount = "0";
-    if (
-      meta.delivered_amount &&
-      typeof meta.delivered_amount === "string" &&
-      !isNaN(Number(meta.delivered_amount))
-    ) {
-      amount = xrpl.dropsToXrp(meta.delivered_amount);
-    } else if (
-      t.Amount &&
-      typeof t.Amount === "string" &&
-      !isNaN(Number(t.Amount))
-    ) {
-      amount = xrpl.dropsToXrp(t.Amount);
+    let currency = "XRP";
+    let issuer = "";
+
+    // Special handling for OfferCreate transactions
+    if (t.TransactionType === "OfferCreate") {
+      // For OfferCreate, compute Buy/Sell lines: creator buys TakerPays, sells TakerGets
+      let takerGetsAmount = "N/A";
+      let takerGetsCurrency = "N/A";
+      let takerPaysAmount = "N/A";
+      let takerPaysCurrency = "N/A";
+
+      // Handle TakerGets
+      if (t.TakerGets) {
+        if (typeof t.TakerGets === "string") {
+          // XRP in drops
+          takerGetsAmount = xrpl.dropsToXrp(t.TakerGets);
+          takerGetsCurrency = "XRP";
+        } else if (typeof t.TakerGets === "object") {
+          // IOU
+          takerGetsAmount = t.TakerGets.value;
+          takerGetsCurrency = t.TakerGets.currency;
+        }
+      }
+
+      // Handle TakerPays
+      if (t.TakerPays) {
+        if (typeof t.TakerPays === "string") {
+          // XRP in drops
+          takerPaysAmount = xrpl.dropsToXrp(t.TakerPays);
+          takerPaysCurrency = "XRP";
+        } else if (typeof t.TakerPays === "object") {
+          // IOU
+          takerPaysAmount = t.TakerPays.value;
+          takerPaysCurrency = t.TakerPays.currency;
+        }
+      }
+
+      // Display strings kept for backward compatibility (not used in markup)
+      amount = `${takerPaysAmount} ${takerPaysCurrency} for ${takerGetsAmount} ${takerGetsCurrency}`;
+      // Map for UI
+      var offerBuyAmount = takerPaysAmount;
+      var offerBuyCurrency = takerPaysCurrency;
+      var offerSellAmount = takerGetsAmount;
+      var offerSellCurrency = takerGetsCurrency;
     } else {
-      amount = "N/A"; // Non-payment tx or unsupported format
+      // Handle currency objects (including "ren" currency)
+      if (t.Amount && typeof t.Amount === "object") {
+        if (t.Amount.currency === "ren") {
+          amount = `${t.Amount.value}`;
+        } else {
+          amount = `${t.Amount.value} ${t.Amount.currency}`;
+        }
+        currency = t.Amount.currency;
+        issuer = t.Amount.issuer || "";
+      } else if (
+        meta.delivered_amount &&
+        typeof meta.delivered_amount === "string" &&
+        !isNaN(Number(meta.delivered_amount))
+      ) {
+        amount = xrpl.dropsToXrp(meta.delivered_amount);
+      } else if (
+        t.Amount &&
+        typeof t.Amount === "string" &&
+        !isNaN(Number(t.Amount))
+      ) {
+        amount = xrpl.dropsToXrp(t.Amount);
+      } else if (t.Amount && typeof t.Amount === "object") {
+        // Handle other currency objects
+        amount = t.Amount.value;
+        currency = t.Amount.currency;
+        issuer = t.Amount.issuer || "";
+        amount = `${amount} ${currency}`;
+      } else {
+        amount = "N/A"; // Non-payment tx or unsupported format
+      }
     }
 
     // Format date
@@ -1168,37 +1236,59 @@ function displayTransactionsPage() {
         </div>
         <div class="tx-info">
           <div class="tx-header">
-            <span class="tx-direction">${direction}</span>
+            <span class="tx-direction ${
+              t.TransactionType === "OfferCreate" ? "offer-create" : ""
+            }">${direction}</span>
             <span class="tx-date">${formattedDate}, ${formattedTime}</span>
           </div>
-          <div class="tx-amount ${directionClass}">
-            ${amount} XRP
-          </div>
+          ${
+            t.TransactionType === "OfferCreate"
+              ? `<div class="tx-offer-lines">
+                   <div class="offer-line">
+                     <span class="offer-label">Buy</span>
+                     <span class="offer-value">${offerBuyAmount} ${offerBuyCurrency}</span>
+                   </div>
+                   <div class="offer-line">
+                     <span class="offer-label">Sell</span>
+                     <span class="offer-value">${offerSellAmount} ${offerSellCurrency}</span>
+                   </div>
+                 </div>`
+              : `<div class="tx-amount ${directionClass}">
+                   ${amount} ${
+                  currency === "XRP" && t.TransactionType !== "OfferCreate"
+                    ? "XRP"
+                    : ""
+                }
+                 </div>`
+          }
           <div class="tx-addresses">
+            ${
+              t.TransactionType === "OfferCreate"
+                ? `<div class="tx-address-row">
+                    <span class="address-label">Account:</span>
+                    <span class="address-value">${t.Account}</span>
+                  </div>`
+                : `<div class="tx-address-row">
+                    <span class="address-label">From:</span>
+                    <span class="address-value">${t.Account}</span>
+                  </div>
+                  ${
+                    currency === "REN" && issuer
+                      ? `<div class="tx-address-row">
+                          <span class="address-label">Issuer:</span>
+                          <span class="address-value">${issuer}</span>
+                        </div>`
+                      : ""
+                  }
+                  <div class="tx-address-row">
+                    <span class="address-label">To:</span>
+                    <span class="address-value">${t.Destination || "N/A"}</span>
+                  </div>`
+            }
             <div class="tx-address-row">
-              <span class="address-label">From:</span>
-              <span class="address-value">${t.Account.substring(
-                0,
-                8
-              )}...${t.Account.substring(t.Account.length - 6)}</span>
+              <span class="address-label">Tx:</span>
+              <span class="hash-value">${t.hash}</span>
             </div>
-            <div class="tx-address-row">
-              <span class="address-label">To:</span>
-              <span class="address-value">${
-                t.Destination
-                  ? t.Destination.substring(0, 8) +
-                    "..." +
-                    t.Destination.substring(t.Destination.length - 6)
-                  : "N/A"
-              }</span>
-            </div>
-          </div>
-          <div class="tx-hash">
-            <span class="hash-label">Tx:</span>
-            <span class="hash-value">${t.hash.substring(
-              0,
-              8
-            )}...${t.hash.substring(t.hash.length - 6)}</span>
           </div>
         </div>
         <div class="tx-status ${statusClass}">
@@ -2010,6 +2100,7 @@ async function checkTransactionDetails() {
         command: "tx",
         transaction: txHash,
       });
+      console.log(txResponse);
 
       if (txResponse.result) {
         displayTransactionDetails(txResponse.result);
@@ -2065,9 +2156,6 @@ function displayTransactionDetails(txData) {
   const txType = txData.TransactionType || "Unknown";
   const account = txData.Account || "N/A";
   const destination = txData.Destination || "N/A";
-  const amount = txData.Amount
-    ? parseFloat(txData.Amount) / 1000000 + " XRP"
-    : "N/A";
   const fee = txData.Fee ? parseFloat(txData.Fee) / 1000000 + " XRP" : "N/A";
   const sequence = txData.Sequence || "N/A";
   const ledgerIndex = txData.ledger_index || "N/A";
@@ -2076,6 +2164,84 @@ function displayTransactionDetails(txData) {
     ? new Date((txData.date + 946684800) * 1000).toLocaleString()
     : "N/A";
   const validated = txData.validated ? "Validated" : "Not Validated";
+
+  // Special handling for OfferCreate transactions
+  let amountInfo = "";
+  if (txType === "OfferCreate") {
+    // Handle TakerGets/Pays and build Buy/Sell lines
+    let takerGetsAmount = "N/A";
+    let takerGetsCurrency = "N/A";
+    if (txData.TakerGets) {
+      if (typeof txData.TakerGets === "string") {
+        // XRP in drops
+        takerGetsAmount = xrpl.dropsToXrp(txData.TakerGets);
+        takerGetsCurrency = "XRP";
+      } else if (typeof txData.TakerGets === "object") {
+        // IOU
+        takerGetsAmount = txData.TakerGets.value;
+        takerGetsCurrency = txData.TakerGets.currency;
+      }
+    }
+
+    // Handle TakerPays
+    let takerPaysAmount = "N/A";
+    let takerPaysCurrency = "N/A";
+    if (txData.TakerPays) {
+      if (typeof txData.TakerPays === "string") {
+        // XRP in drops
+        takerPaysAmount = xrpl.dropsToXrp(txData.TakerPays);
+        takerPaysCurrency = "XRP";
+      } else if (typeof txData.TakerPays === "object") {
+        // IOU
+        takerPaysAmount = txData.TakerPays.value;
+        takerPaysCurrency = txData.TakerPays.currency;
+      }
+    }
+
+    amountInfo = `
+      <div class="tx-detail-row">
+        <span class="tx-detail-label"><i class="fas fa-arrow-circle-up"></i> Buy:</span>
+        <span class="tx-detail-value amount">${takerPaysAmount} ${takerPaysCurrency}</span>
+      </div>
+      <div class="tx-detail-row">
+        <span class="tx-detail-label"><i class="fas fa-arrow-circle-down"></i> Sell:</span>
+        <span class="tx-detail-value amount">${takerGetsAmount} ${takerGetsCurrency}</span>
+      </div>
+    `;
+  } else {
+    // Handle regular payment transactions (XRP or IOU like REN)
+    let amountStr = "N/A";
+    let issuerStr = "";
+    if (txData.Amount) {
+      if (typeof txData.Amount === "string") {
+        amountStr = parseFloat(txData.Amount) / 1000000 + " XRP";
+      } else if (typeof txData.Amount === "object") {
+        amountStr = `${txData.Amount.value} ${txData.Amount.currency}`;
+        issuerStr = txData.Amount.issuer || "";
+      }
+    }
+
+    amountInfo = `
+      <div class="tx-detail-row">
+        <span class="tx-detail-label">
+          <i class="fas fa-coins"></i>
+          Amount:
+        </span>
+        <span class="tx-detail-value amount">${amountStr}</span>
+      </div>
+      ${
+        issuerStr
+          ? `<div class="tx-detail-row">
+               <span class="tx-detail-label">
+                 <i class="fas fa-building"></i>
+                 Issuer:
+               </span>
+               <span class="tx-detail-value">${issuerStr}</span>
+             </div>`
+          : ""
+      }
+    `;
+  }
 
   detailsContainer.innerHTML = `
     <div class="tx-detail-card">
@@ -2093,13 +2259,7 @@ function displayTransactionDetails(txData) {
         </span>
         <span class="tx-detail-value">${txType}</span>
       </div>
-      <div class="tx-detail-row">
-        <span class="tx-detail-label">
-          <i class="fas fa-coins"></i>
-          Amount:
-        </span>
-        <span class="tx-detail-value amount">${amount}</span>
-      </div>
+      ${amountInfo}
       <div class="tx-detail-row">
         <span class="tx-detail-label">
           <i class="fas fa-receipt"></i>
@@ -2118,7 +2278,7 @@ function displayTransactionDetails(txData) {
         <span class="tx-detail-value">${account}</span>
       </div>
       ${
-        destination !== "N/A"
+        destination !== "N/A" && txType !== "OfferCreate"
           ? `
       <div class="tx-detail-row">
         <span class="tx-detail-label">
