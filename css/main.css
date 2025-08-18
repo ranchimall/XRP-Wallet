@@ -1173,6 +1173,16 @@ body {
   border-left: 4px solid var(--danger-color);
 }
 
+/* OfferCreate styling - sky blue like a third category */
+.transaction-card.offer {
+  border-left: 4px solid #87ceeb;
+}
+
+.transaction-card.offer .tx-icon {
+  background: rgba(135, 206, 235, 0.15);
+  color: #87ceeb;
+}
+
 .tx-main {
   display: flex;
   align-items: flex-start;
@@ -1220,6 +1230,14 @@ body {
   font-size: 1rem;
 }
 
+.tx-direction.offer-create {
+  color: #87ceeb; /* Sky blue color */
+}
+
+.transaction-card.offer .tx-direction {
+  color: #87ceeb; 
+}
+
 .tx-date {
   font-size: 0.875rem;
   color: var(--text-secondary);
@@ -1247,6 +1265,40 @@ body {
 
 .tx-amount.outgoing {
   color: var(--danger-color);
+}
+
+.transaction-card.offer .tx-amount {
+  color: #87ceeb; /* Sky blue color */
+}
+
+/* Make OfferCreate text white-ish */
+.transaction-card.offer .tx-direction,
+.transaction-card.offer .tx-amount {
+  color: var(--text-primary);
+}
+
+/* OfferCreate Buy/Sell layout */
+.tx-offer-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.offer-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.offer-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.offer-value {
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .tx-addresses {
@@ -1322,7 +1374,55 @@ body {
 /* Responsive design for transaction cards */
 @media (max-width: 768px) {
   .transaction-card {
-    padding-right: 1rem;
+    padding: 0.75rem;
+  }
+
+  /* Make address information in one line for OfferCreate transactions on small screens */
+  .transaction-card.offer .tx-addresses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .transaction-card.offer .tx-address-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0;
+  }
+
+  .transaction-card.offer .address-label {
+    min-width: auto;
+    font-size: 0.75rem;
+  }
+
+  .transaction-card.offer .address-value {
+    font-size: 0.75rem;
+  }
+
+  /* General styling for address rows on small screens */
+  .tx-addresses {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* Truncate address values on small screens */
+  .tx-address-row .address-value,
+  .tx-address-row .hash-value {
+    max-width: 50vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: bottom;
+  }
+
+  .tx-address-row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0;
   }
 
   .tx-main {
@@ -1354,6 +1454,7 @@ body {
 
   .tx-amount {
     font-size: 1rem;
+    margin-bottom: 0.5rem;
   }
 
   .tx-address-row,
